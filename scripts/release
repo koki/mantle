@@ -1,0 +1,6 @@
+#!/bin/bash
+
+project_root=$(dirname $0)/..
+cd $project_root
+
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -tags netgo -ldflags '-w' -o bin/mantle
