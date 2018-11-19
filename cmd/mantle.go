@@ -7,8 +7,8 @@ import (
 )
 
 var RootCmd = &cobra.Command{
-	Use:           "mantle",
-	Short:         "easier kube objects",
+	Use:           "pulsar",
+	Short:         "deploys and manages apache pulsar",
 	SilenceErrors: true,
 	SilenceUsage:  true,
 	RunE: func(_ *cobra.Command, args []string) error {
