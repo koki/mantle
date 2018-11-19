@@ -20,9 +20,10 @@ type ConfigMap struct {
 
 func NewConfigMapFromKubeConfigMap(cm interface{}) (*ConfigMap, error) {
 	switch reflect.TypeOf(cm) {
-	case reflect.TypeOf(v1.ConfigMap):
-		return fromKubeV1(&cm.(v1.ConfigMap))
-	case reflect.TypeOf(*v1.ConfigMap):
+	case reflect.TypeOf(v1.ConfigMap{}):
+		obj := cm.(v1.ConfigMap)
+		return fromKubeV1(&obj)
+	case reflect.TypeOf(&v1.ConfigMap{}):
 		return fromKubeV1(cm.(*v1.ConfigMap))
 	default:
 		return fromKubeV1(cm.(*v1.ConfigMap))
@@ -43,9 +44,9 @@ func fromKubeV1(kubeConfigMap *v1.ConfigMap) (*ConfigMap, error) {
 	return cm, nil
 }
 
-func (cm *ConfigMap) ToKube() (*runtime.Object, error) {
+func (cm *ConfigMap) ToKube() (runtime.Object, error) {
 	switch cm.Version {
-	case cm.Version == "v1":
+	case "v1":
 		return cm.toKubeV1()
 	default:
 		return cm.toKubeV1()
@@ -64,5 +65,5 @@ func (cm *ConfigMap) toKubeV1() (*v1.ConfigMap, error) {
 	kubeConfigMap.Annotations = cm.Annotations
 	kubeConfigMap.Data = cm.Data
 
-	return kubeConfigMap
+	return kubeConfigMap, nil
 }
