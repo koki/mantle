@@ -3,7 +3,7 @@ package main
 import (
 	"mantle/cmd"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {

@@ -3,9 +3,9 @@ package core
 import (
 	"reflect"
 
-        "k8s.io/api/core/v1"
+	"k8s.io/api/core/v1"
 
-        "k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type ConfigMap struct {
@@ -31,13 +31,13 @@ func NewConfigMapFromKubeConfigMap(cm interface{}) (*ConfigMap, error) {
 
 func fromKubeV1(kubeConfigMap *v1.ConfigMap) (*ConfigMap, error) {
 	cm := &ConfigMap{
-		Name: kubeConfigMap.Name,
-		Namespace: kubeConfigMap.Namespace,
-		Version: kubeConfigMap.APIVersion,
-		Cluster: kubeConfigMap.ClusterName,
-		Labels: kubeConfigMap.Labels,
+		Name:        kubeConfigMap.Name,
+		Namespace:   kubeConfigMap.Namespace,
+		Version:     kubeConfigMap.APIVersion,
+		Cluster:     kubeConfigMap.ClusterName,
+		Labels:      kubeConfigMap.Labels,
 		Annotations: kubeConfigMap.Annotations,
-		Data: kubeConfigMap.Data,
+		Data:        kubeConfigMap.Data,
 	}
 
 	return cm, nil

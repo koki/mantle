@@ -1,7 +1,17 @@
-package main
+package cmd
 
-import "fmt"
+import (
+	"mantle/pkg/init"
 
-func main() {
-	fmt.Println("vim-go")
+	"github.com/spf13/cobra"
+)
+
+var RootCmd = &cobra.Command{
+	Use:           "mantle",
+	Short:         "easier kube objects",
+	SilenceErrors: true,
+	SilenceUsage:  true,
+	RunE: func(_ *cobra.Command, args []string) error {
+		return init.MantleInit()
+	},
 }
