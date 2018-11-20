@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 
+	"mantle/internal/yaml"
 	"mantle/pkg/core"
 
 	"k8s.io/api/core/v1"
@@ -20,7 +21,7 @@ func Decode(input io.Reader) (io.Reader, error) {
 		return nil, err
 	}
 	obj := map[string]interface{}{}
-	err = json.Unmarshal(data, &obj)
+	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
 		return nil, err
 	}
