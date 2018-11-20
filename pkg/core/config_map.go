@@ -1,7 +1,9 @@
 package core
 
 import (
+	"fmt"
 	"reflect"
+	"strings"
 
 	"k8s.io/api/core/v1"
 
@@ -16,8 +18,11 @@ type ConfigMap struct {
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
 	Data        map[string]string `json:"data,omitempty"`
+	BinaryData  map[string][]byte `json:"binaryData,omitempty"`
 }
 
+// NewConfigMapFromKubeConfigMap will create a new ConfigMap object with
+// the data from a provided kubernetes config map object
 func NewConfigMapFromKubeConfigMap(cm interface{}) (*ConfigMap, error) {
 	switch reflect.TypeOf(cm) {
 	case reflect.TypeOf(v1.ConfigMap{}):
@@ -39,17 +44,20 @@ func fromKubeV1(kubeConfigMap *v1.ConfigMap) (*ConfigMap, error) {
 		Labels:      kubeConfigMap.Labels,
 		Annotations: kubeConfigMap.Annotations,
 		Data:        kubeConfigMap.Data,
+		BinaryData:  kubeConfigMap.BinaryData,
 	}
 
 	return cm, nil
 }
 
+// ToKube will return a kubernetes object of the api version
+// type defined in the ConfigMap
 func (cm *ConfigMap) ToKube() (runtime.Object, error) {
-	switch cm.Version {
+	switch strings.ToLower(cm.Version) {
 	case "v1":
 		return cm.toKubeV1()
 	default:
-		return cm.toKubeV1()
+		return nil, fmt.Errorf("unsupported api version: %s", cm.Version)
 	}
 }
 
@@ -64,6 +72,7 @@ func (cm *ConfigMap) toKubeV1() (*v1.ConfigMap, error) {
 	kubeConfigMap.Labels = cm.Labels
 	kubeConfigMap.Annotations = cm.Annotations
 	kubeConfigMap.Data = cm.Data
+	kubeConfigMap.BinaryData = cm.BinaryData
 
 	return kubeConfigMap, nil
 }
