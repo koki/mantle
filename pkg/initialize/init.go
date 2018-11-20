@@ -1,6 +1,7 @@
-package init
+package initialize
 
 import (
+	"io"
 	"os"
 
 	"mantle/pkg/codec"
@@ -11,6 +12,6 @@ func MantleInit() error {
 	if err != nil {
 		return err
 	}
-	_, err := io.Copy(os.Stdout, out)
+	_, err = io.Copy(os.Stdout, out)
 	return err
 }

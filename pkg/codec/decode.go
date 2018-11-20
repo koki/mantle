@@ -3,17 +3,24 @@ package codec
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
+	"io/ioutil"
 
-	"mantle/pkg/core/v1"
+	"mantle/pkg/core"
 
+	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func Decode(input io.Reader) (io.Writer, error) {
+func Decode(input io.Reader) (io.Reader, error) {
+	data, err := ioutil.ReadAll(input)
+	if err != nil {
+		return nil, err
+	}
 	obj := map[string]interface{}{}
-	err := json.Unmarshal(data, &obj)
+	err = json.Unmarshal(data, &obj)
 	if err != nil {
 		return nil, err
 	}
@@ -24,30 +31,32 @@ func Decode(input io.Reader) (io.Writer, error) {
 		return nil, err
 	}
 
-	if kubeObj.GetObjectKind == "ConfigMap" {
-		cm, err := v1.NewConfigMapFromKubeConfigMap(kubeObj)
+	switch kubeTypedObj := kubeObj.(type) {
+	case *v1.ConfigMap:
+		cm, err := core.NewConfigMapFromKubeConfigMap(kubeTypedObj)
 		if err != nil {
 			return nil, err
 		}
 		buf := &bytes.Buffer{}
 		encoder := json.NewEncoder(buf)
-		err := encoder.Encode(cm)
+		err = encoder.Encode(cm)
 		return buf, err
 	}
+	return nil, errors.New("unreachable")
 }
 
-func ParseKubeNativeType(obj interface{}) (runtime.Object, error) {
+func ParseKubeNativeType(obj map[string]interface{}) (runtime.Object, error) {
 	u := &unstructured.Unstructured{
 		Object: obj,
 	}
 
 	typedObj, err := creator.New(u.GetObjectKind().GroupVersionKind())
 	if err != nil {
-		return nil, serrors.InvalidValueContextErrorf(err, u, "unsupported apiVersion/kind (is the manifest kube-native format?)")
+		return nil, err
 	}
 
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(obj, typedObj); err != nil {
-		return nil, serrors.InvalidValueForTypeContextErrorf(err, obj, typedObj, "couldn't convert to typed kube obj")
+		return nil, err
 	}
 	return typedObj, nil
 }

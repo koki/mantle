@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"mantle/pkg/init"
+	"mantle/pkg/initialize"
 
 	"github.com/spf13/cobra"
 )
@@ -12,6 +12,6 @@ var RootCmd = &cobra.Command{
 	SilenceErrors: true,
 	SilenceUsage:  true,
 	RunE: func(_ *cobra.Command, args []string) error {
-		return init.MantleInit()
+		return initialize.MantleInit()
 	},
 }
