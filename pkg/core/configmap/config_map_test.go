@@ -1,4 +1,4 @@
-package core
+package configmap
 
 import (
 	"reflect"
@@ -84,6 +84,11 @@ func TestToKube(t *testing.T) {
 		{
 			description: "v1 api version",
 			version:     "v1",
+			expectedObj: &v1.ConfigMap{},
+		},
+		{
+			description: "empty api version",
+			version:     "",
 			expectedObj: &v1.ConfigMap{},
 		},
 		{
