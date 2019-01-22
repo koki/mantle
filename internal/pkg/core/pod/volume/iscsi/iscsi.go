@@ -1,12 +1,5 @@
 package iscsi
 
-import (
-	"mantle/internal/marshal"
-
-	"github.com/koki/json/jsonutil"
-	serrors "github.com/koki/structurederrors"
-)
-
 type ISCSIVolume struct {
 	TargetPortal   string   `json:"target_portal"`
 	IQN            string   `json:"iqn"`
@@ -21,29 +14,4 @@ type ISCSIVolume struct {
 	SecretRef         string `json:"secret,omitempty"`
 	// NOTE: InitiatorName is a pointer in k8s
 	InitiatorName string `json:"initiator,omitempty"`
-}
-
-func (s *ISCSIVolume) Unmarshal(obj map[string]interface{}, selector []string) error {
-	if len(selector) != 0 {
-		return serrors.InvalidValueErrorf(selector, "expected zero selector segments for %s", marshal.VolumeTypeISCSI)
-	}
-
-	err := jsonutil.UnmarshalMap(obj, &s)
-	if err != nil {
-		return serrors.ContextualizeErrorf(err, marshal.VolumeTypeISCSI)
-	}
-
-	return nil
-}
-
-func (s ISCSIVolume) Marshal() (*marshal.MarshalledVolume, error) {
-	obj, err := jsonutil.MarshalMap(&s)
-	if err != nil {
-		return nil, serrors.ContextualizeErrorf(err, marshal.VolumeTypeISCSI)
-	}
-
-	return &marshal.MarshalledVolume{
-		Type:        marshal.VolumeTypeISCSI,
-		ExtraFields: obj,
-	}, nil
 }

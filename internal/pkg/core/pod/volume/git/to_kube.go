@@ -20,10 +20,14 @@ func (s *GitVolume) ToKube(version string) (interface{}, error) {
 	}
 }
 
-func (s *GitVolume) toKubeV1() (*v1.GitRepoVolumeSource, error) {
-	return &v1.GitRepoVolumeSource{
-		Repository: s.Repository,
-		Revision:   s.Revision,
-		Directory:  s.Directory,
+func (s *GitVolume) toKubeV1() (*v1.Volume, error) {
+	return &v1.Volume{
+		VolumeSource: v1.VolumeSource{
+			GitRepo: &v1.GitRepoVolumeSource{
+				Repository: s.Repository,
+				Revision:   s.Revision,
+				Directory:  s.Directory,
+			},
+		},
 	}, nil
 }

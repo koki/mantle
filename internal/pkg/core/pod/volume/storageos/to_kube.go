@@ -22,12 +22,16 @@ func (s *StorageOSVolume) ToKube(version string) (interface{}, error) {
 	}
 }
 
-func (s *StorageOSVolume) toKubeV1() (*v1.StorageOSVolumeSource, error) {
-	return &v1.StorageOSVolumeSource{
-		VolumeName:      s.VolumeName,
-		VolumeNamespace: s.VolumeNamespace,
-		FSType:          s.FSType,
-		ReadOnly:        s.ReadOnly,
-		SecretRef:       converterutils.NewKubeLocalObjectRefV1(s.SecretRef),
+func (s *StorageOSVolume) toKubeV1() (*v1.Volume, error) {
+	return &v1.Volume{
+		VolumeSource: v1.VolumeSource{
+			StorageOS: &v1.StorageOSVolumeSource{
+				VolumeName:      s.VolumeName,
+				VolumeNamespace: s.VolumeNamespace,
+				FSType:          s.FSType,
+				ReadOnly:        s.ReadOnly,
+				SecretRef:       converterutils.NewKubeLocalObjectRefV1(s.SecretRef),
+			},
+		},
 	}, nil
 }
