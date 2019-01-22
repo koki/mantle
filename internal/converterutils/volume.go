@@ -6,7 +6,7 @@ import (
 	"k8s.io/api/core/v1"
 )
 
-func NewKubeV1LocalObjectRef(ref string) *v1.LocalObjectReference {
+func NewKubeLocalObjectRefV1(ref string) *v1.LocalObjectReference {
 	if len(ref) == 0 {
 		return nil
 	}
