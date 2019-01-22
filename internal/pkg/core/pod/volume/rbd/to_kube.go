@@ -22,15 +22,19 @@ func (s *RBDVolume) ToKube(version string) (interface{}, error) {
 	}
 }
 
-func (s *RBDVolume) toKubeV1() (*v1.RBDVolumeSource, error) {
-	return &v1.RBDVolumeSource{
-		CephMonitors: s.CephMonitors,
-		RBDImage:     s.RBDImage,
-		FSType:       s.FSType,
-		RBDPool:      s.RBDPool,
-		RadosUser:    s.RadosUser,
-		Keyring:      s.Keyring,
-		SecretRef:    converterutils.NewKubeLocalObjectRefV1(s.SecretRef),
-		ReadOnly:     s.ReadOnly,
+func (s *RBDVolume) toKubeV1() (*v1.Volume, error) {
+	return &v1.Volume{
+		VolumeSource: v1.VolumeSource{
+			RBD: &v1.RBDVolumeSource{
+				CephMonitors: s.CephMonitors,
+				RBDImage:     s.RBDImage,
+				FSType:       s.FSType,
+				RBDPool:      s.RBDPool,
+				RadosUser:    s.RadosUser,
+				Keyring:      s.Keyring,
+				SecretRef:    converterutils.NewKubeLocalObjectRefV1(s.SecretRef),
+				ReadOnly:     s.ReadOnly,
+			},
+		},
 	}, nil
 }

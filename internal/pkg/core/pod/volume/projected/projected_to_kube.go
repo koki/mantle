@@ -24,14 +24,18 @@ func (s *ProjectedVolume) ToKube(version string) (interface{}, error) {
 	}
 }
 
-func (s *ProjectedVolume) toKubeV1() (*v1.ProjectedVolumeSource, error) {
+func (s *ProjectedVolume) toKubeV1() (*v1.Volume, error) {
 	sources, err := s.toKubeVolumeProjectionsV1()
 	if err != nil {
 		return nil, serrors.ContextualizeErrorf(err, "volume (%+v)", s)
 	}
-	return &v1.ProjectedVolumeSource{
-		Sources:     sources,
-		DefaultMode: filemode.ConvertFileModeToInt32Ptr(s.DefaultMode),
+	return &v1.Volume{
+		VolumeSource: v1.VolumeSource{
+			Projected: &v1.ProjectedVolumeSource{
+				Sources:     sources,
+				DefaultMode: filemode.ConvertFileModeToInt32Ptr(s.DefaultMode),
+			},
+		},
 	}, nil
 }
 

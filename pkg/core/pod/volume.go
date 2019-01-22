@@ -3,9 +3,7 @@ package pod
 import (
 	"fmt"
 	"reflect"
-	"strings"
 
-	. "mantle/internal/marshal"
 	. "mantle/internal/pkg/core/pod/volume/aws"
 	. "mantle/internal/pkg/core/pod/volume/azure"
 	. "mantle/internal/pkg/core/pod/volume/ceph"
@@ -33,9 +31,7 @@ import (
 	. "mantle/internal/pkg/core/pod/volume/storageos"
 	. "mantle/internal/pkg/core/pod/volume/vsphere"
 
-	"github.com/koki/json"
-	"github.com/koki/json/jsonutil"
-	serrors "github.com/koki/structurederrors"
+	"k8s.io/api/core/v1"
 )
 
 type Volume struct {
@@ -68,234 +64,6 @@ type Volume struct {
 	StorageOS    *StorageOSVolume
 }
 
-func (v *Volume) UnmarshalJSON(data []byte) error {
-	var err error
-	str := ""
-	err = json.Unmarshal(data, &str)
-	if err == nil {
-		segments := strings.Split(str, ":")
-		return v.Unmarshal(nil, segments[0], segments[1:])
-	}
-
-	obj := map[string]interface{}{}
-	err = json.Unmarshal(data, &obj)
-	if err != nil {
-		return serrors.InvalidValueErrorf(string(data), "expected either string or dictionary")
-	}
-
-	selector := []string{}
-	if val, ok := obj["vol_id"]; ok {
-		if volName, ok := val.(string); ok {
-			selector = append(selector, volName)
-		} else {
-			return serrors.InvalidValueErrorf(string(data), "expected string for key \"vol_id\"")
-		}
-	}
-
-	volType, err := jsonutil.GetStringEntry(obj, "vol_type")
-	if err != nil {
-		return err
-	}
-
-	return v.Unmarshal(obj, volType, selector)
-}
-
-func (v *Volume) Unmarshal(obj map[string]interface{}, volType string, selector []string) error {
-	switch volType {
-	case VolumeTypeHostPath:
-		v.HostPath = &HostPathVolume{}
-		return v.HostPath.Unmarshal(selector)
-	case VolumeTypeEmptyDir:
-		v.EmptyDir = &EmptyDirVolume{}
-		return v.EmptyDir.Unmarshal(obj, selector)
-	case VolumeTypeGcePD:
-		v.GcePD = &GcePDVolume{}
-		return v.GcePD.Unmarshal(obj, selector)
-	case VolumeTypeAwsEBS:
-		v.AwsEBS = &AwsEBSVolume{}
-		return v.AwsEBS.Unmarshal(obj, selector)
-	case VolumeTypeAzureDisk:
-		v.AzureDisk = &AzureDiskVolume{}
-		return v.AzureDisk.Unmarshal(obj, selector)
-	case VolumeTypeAzureFile:
-		v.AzureFile = &AzureFileVolume{}
-		return v.AzureFile.Unmarshal(selector)
-	case VolumeTypeCephFS:
-		v.CephFS = &CephFSVolume{}
-		return v.CephFS.Unmarshal(obj, selector)
-	case VolumeTypeCinder:
-		v.Cinder = &CinderVolume{}
-		return v.Cinder.Unmarshal(obj, selector)
-	case VolumeTypeFibreChannel:
-		v.FibreChannel = &FibreChannelVolume{}
-		return v.FibreChannel.Unmarshal(obj, selector)
-	case VolumeTypeFlex:
-		v.Flex = &FlexVolume{}
-		return v.Flex.Unmarshal(obj, selector)
-	case VolumeTypeFlocker:
-		v.Flocker = &FlockerVolume{}
-		return v.Flocker.Unmarshal(selector)
-	case VolumeTypeGlusterfs:
-		v.Glusterfs = &GlusterfsVolume{}
-		return v.Glusterfs.Unmarshal(obj, selector)
-	case VolumeTypeISCSI:
-		v.ISCSI = &ISCSIVolume{}
-		return v.ISCSI.Unmarshal(obj, selector)
-	case VolumeTypeNFS:
-		v.NFS = &NFSVolume{}
-		return v.NFS.Unmarshal(selector)
-	case VolumeTypePhotonPD:
-		v.PhotonPD = &PhotonPDVolume{}
-		return v.PhotonPD.Unmarshal(selector)
-	case VolumeTypePortworx:
-		v.Portworx = &PortworxVolume{}
-		return v.Portworx.Unmarshal(obj, selector)
-	case VolumeTypePVC:
-		v.PVC = &PVCVolume{}
-		return v.PVC.Unmarshal(selector)
-	case VolumeTypeQuobyte:
-		v.Quobyte = &QuobyteVolume{}
-		return v.Quobyte.Unmarshal(obj, selector)
-	case VolumeTypeScaleIO:
-		v.ScaleIO = &ScaleIOVolume{}
-		return v.ScaleIO.Unmarshal(obj, selector)
-	case VolumeTypeVsphere:
-		v.Vsphere = &VsphereVolume{}
-		return v.Vsphere.Unmarshal(obj, selector)
-	case VolumeTypeConfigMap:
-		v.ConfigMap = &ConfigMapVolume{}
-		return v.ConfigMap.Unmarshal(obj, selector)
-	case VolumeTypeSecret:
-		v.Secret = &SecretVolume{}
-		return v.Secret.Unmarshal(obj, selector)
-	case VolumeTypeDownwardAPI:
-		v.DownwardAPI = &DownwardAPIVolume{}
-		return v.DownwardAPI.Unmarshal(obj, selector)
-	case VolumeTypeProjected:
-		v.Projected = &ProjectedVolume{}
-		return v.Projected.Unmarshal(obj, selector)
-	case VolumeTypeGit:
-		v.Git = &GitVolume{}
-		return v.Git.Unmarshal(obj, selector)
-	case VolumeTypeRBD:
-		v.RBD = &RBDVolume{}
-		return v.RBD.Unmarshal(obj, selector)
-	case VolumeTypeStorageOS:
-		v.StorageOS = &StorageOSVolume{}
-		return v.StorageOS.Unmarshal(obj, selector)
-	default:
-		return serrors.InvalidValueErrorf(volType, "unsupported volume type (%s)", volType)
-	}
-}
-
-func (v Volume) MarshalJSON() ([]byte, error) {
-	var marshalledVolume *MarshalledVolume
-	var err error
-	if v.HostPath != nil {
-		marshalledVolume, err = v.HostPath.Marshal()
-	}
-	if v.EmptyDir != nil {
-		marshalledVolume, err = v.EmptyDir.Marshal()
-	}
-	if v.GcePD != nil {
-		marshalledVolume, err = v.GcePD.Marshal()
-	}
-	if v.AwsEBS != nil {
-		marshalledVolume, err = v.AwsEBS.Marshal()
-	}
-	if v.AzureDisk != nil {
-		marshalledVolume, err = v.AzureDisk.Marshal()
-	}
-	if v.AzureFile != nil {
-		marshalledVolume, err = v.AzureFile.Marshal()
-	}
-	if v.CephFS != nil {
-		marshalledVolume, err = v.CephFS.Marshal()
-	}
-	if v.Cinder != nil {
-		marshalledVolume, err = v.Cinder.Marshal()
-	}
-	if v.FibreChannel != nil {
-		marshalledVolume, err = v.FibreChannel.Marshal()
-	}
-	if v.Flex != nil {
-		marshalledVolume, err = v.Flex.Marshal()
-	}
-	if v.Flocker != nil {
-		marshalledVolume, err = v.Flocker.Marshal()
-	}
-	if v.Glusterfs != nil {
-		marshalledVolume, err = v.Glusterfs.Marshal()
-	}
-	if v.ISCSI != nil {
-		marshalledVolume, err = v.ISCSI.Marshal()
-	}
-	if v.NFS != nil {
-		marshalledVolume, err = v.NFS.Marshal()
-	}
-	if v.PhotonPD != nil {
-		marshalledVolume, err = v.PhotonPD.Marshal()
-	}
-	if v.Portworx != nil {
-		marshalledVolume, err = v.Portworx.Marshal()
-	}
-	if v.PVC != nil {
-		marshalledVolume, err = v.PVC.Marshal()
-	}
-	if v.Quobyte != nil {
-		marshalledVolume, err = v.Quobyte.Marshal()
-	}
-	if v.ScaleIO != nil {
-		marshalledVolume, err = v.ScaleIO.Marshal()
-	}
-	if v.Vsphere != nil {
-		marshalledVolume, err = v.Vsphere.Marshal()
-	}
-	if v.ConfigMap != nil {
-		marshalledVolume, err = v.ConfigMap.Marshal()
-	}
-	if v.Secret != nil {
-		marshalledVolume, err = v.Secret.Marshal()
-	}
-	if v.DownwardAPI != nil {
-		marshalledVolume, err = v.DownwardAPI.Marshal()
-	}
-	if v.Projected != nil {
-		marshalledVolume, err = v.Projected.Marshal()
-	}
-	if v.Git != nil {
-		marshalledVolume, err = v.Git.Marshal()
-	}
-	if v.RBD != nil {
-		marshalledVolume, err = v.RBD.Marshal()
-	}
-	if v.StorageOS != nil {
-		marshalledVolume, err = v.StorageOS.Marshal()
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if marshalledVolume == nil {
-		return nil, serrors.InvalidInstanceErrorf(v, "empty volume definition")
-	}
-
-	if len(marshalledVolume.ExtraFields) == 0 {
-		segments := []string{marshalledVolume.Type}
-		segments = append(segments, marshalledVolume.Selector...)
-		return json.Marshal(strings.Join(segments, ":"))
-	}
-
-	obj := marshalledVolume.ExtraFields
-	obj["vol_type"] = marshalledVolume.Type
-	if len(marshalledVolume.Selector) > 0 {
-		obj["vol_id"] = strings.Join(marshalledVolume.Selector, ":")
-	}
-
-	return json.Marshal(obj)
-}
-
 func (v *Volume) ToKube(version string) (interface{}, interface{}) {
 	fields := reflect.ValueOf(v).Elem()
 	for n := 0; n < fields.NumField(); n++ {
@@ -311,5 +79,128 @@ func (v *Volume) ToKube(version string) (interface{}, interface{}) {
 }
 
 func NewVolumeFromKubeVolume(obj interface{}) (*Volume, error) {
-	return nil, nil
+	switch reflect.TypeOf(obj) {
+	case reflect.TypeOf(v1.Volume{}):
+		o := obj.(v1.Volume)
+		return fromKubeVolumeV1(&o)
+	case reflect.TypeOf(&v1.Volume{}):
+		return fromKubeVolumeV1(obj.(*v1.Volume))
+	default:
+		return nil, fmt.Errorf("unknown Volume version: %s", reflect.TypeOf(obj))
+	}
+}
+
+func fromKubeVolumeV1(obj *v1.Volume) (*Volume, error) {
+	var vol Volume
+	var err error
+
+	if obj.HostPath != nil {
+		vol.HostPath, err = NewHostPathVolumeFromKubeHostPathVolumeSource(obj.HostPath)
+	}
+
+	if obj.EmptyDir != nil {
+		vol.EmptyDir, err = NewEmptyDirVolumeFromKubeEmptyDirVolumeSource(obj.EmptyDir)
+	}
+
+	if obj.GCEPersistentDisk != nil {
+		vol.GcePD, err = NewGcePDVolumeFromKubeGCEPersistentDiskVolumeSource(obj.GCEPersistentDisk)
+	}
+
+	if obj.AWSElasticBlockStore != nil {
+		vol.AwsEBS, err = NewAwsEBSVolumeFromKubeAWSElasticBlockStoreVolumeSource(obj.AWSElasticBlockStore)
+	}
+
+	if obj.GitRepo != nil {
+		vol.Git, err = NewGitVolumeFromKubeGitRepoVolumeSource(obj.GitRepo)
+	}
+
+	if obj.Secret != nil {
+		vol.Secret, err = NewSecretVolumeFromKubeSecretVolumeSource(obj.Secret)
+	}
+
+	if obj.NFS != nil {
+		vol.NFS, err = NewNFSVolumeFromNFSVolumeSource(obj.NFS)
+	}
+
+	if obj.ISCSI != nil {
+		vol.ISCSI, err = NewAwsEBSVolumeFromKubeISCSIVolumeSource(obj.ISCSI)
+	}
+
+	if obj.Glusterfs != nil {
+		vol.Glusterfs, err = NewGlusterfsVolumeFromKubeGlusterfsVolumeSource(obj.Glusterfs)
+	}
+
+	if obj.PersistentVolumeClaim != nil {
+		vol.PVC, err = NewPVCVolumeFromKubePersistentVolumeClaimVolumeSource(obj.PersistentVolumeClaim)
+	}
+
+	if obj.RBD != nil {
+		vol.RBD, err = NewRBDVolumeFromKubeRBDVolumeSource(obj.RBD)
+	}
+
+	if obj.FlexVolume != nil {
+		vol.Flex, err = NewFlexVolumeFromKubeFlexVolumeSource(obj.FlexVolume)
+	}
+
+	if obj.Cinder != nil {
+		vol.Cinder, err = NewCinderVolumeFromKubeCinderVolumeSource(obj.Cinder)
+	}
+
+	if obj.CephFS != nil {
+		vol.CephFS, err = NewCephFSVolumeFromKubeCephFSVolumeSource(obj.CephFS)
+	}
+
+	if obj.Flocker != nil {
+		vol.Flocker, err = NewFlockerVolumeFromKubeFlockerVolumeSource(obj.Flocker)
+	}
+
+	if obj.DownwardAPI != nil {
+		vol.DownwardAPI, err = NewDownwardAPIVolumeFromKubeDownwardAPIVolumeSource(obj.DownwardAPI)
+	}
+
+	if obj.FC != nil {
+		vol.FibreChannel, err = NewFibreChannelVolumeFromKubeFCVolumeSource(obj.FC)
+	}
+
+	if obj.AzureFile != nil {
+		vol.AzureFile, err = NewAzureFileVolumeFromAzureFileVolumeSource(obj.AzureFile)
+	}
+
+	if obj.ConfigMap != nil {
+		vol.ConfigMap, err = NewConfigMapVolumeFromKubeConfigMapVolumeSource(obj.ConfigMap)
+	}
+
+	if obj.VsphereVolume != nil {
+		vol.Vsphere, err = NewVsphereVolumeFromKubeVsphereVirtualDiskVolumeSource(obj.VsphereVolume)
+	}
+
+	if obj.Quobyte != nil {
+		vol.Quobyte, err = NewQuobyteVolumeFromKubeQuobyteVolumeSource(obj.Quobyte)
+	}
+
+	if obj.AzureDisk != nil {
+		vol.AzureDisk, err = NewAzureDiskVolumeFromAzureDiskVolumeSource(obj.AzureDisk)
+	}
+
+	if obj.PhotonPersistentDisk != nil {
+		vol.PhotonPD, err = NewPhotonPDVolumeFromKubePhotonPersistentDiskVolumeSource(obj.PhotonPersistentDisk)
+	}
+
+	if obj.Projected != nil {
+		vol.Projected, err = NewProjectedVolumeFromKubeProjectedVolumeSource(obj.Projected)
+	}
+
+	if obj.PortworxVolume != nil {
+		vol.Portworx, err = NewPortworxVolumeVolumeFromKubePortworxVolumeSource(obj.PortworxVolume)
+	}
+
+	if obj.ScaleIO != nil {
+		vol.ScaleIO, err = NewScaleIOVolumeFromKubeScaleIOVolumeSource(obj.ScaleIO)
+	}
+
+	if obj.StorageOS != nil {
+		vol.StorageOS, err = NewStorageOSVolumeFromKubeStorageOSVolumeSource(obj.StorageOS)
+	}
+
+	return &vol, err
 }
