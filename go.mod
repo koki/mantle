@@ -23,7 +23,7 @@ require (
 	github.com/gregjones/httpcache v0.0.0-20181110185634-c63ab54fda8f // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.0 // indirect
-	github.com/imdario/mergo v0.3.6 // indirect
+	github.com/imdario/mergo v0.3.6
 	github.com/json-iterator/go v1.1.5 // indirect
 	github.com/koki/json v0.0.0-20180412040528-e521cbda08e3
 	github.com/koki/structurederrors v0.0.0-20180506174113-6b997eb5e2ca
@@ -47,13 +47,13 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v2 v2.2.2
-	k8s.io/api v0.0.0-20180523062530-d216743eed4c
-	k8s.io/apiextensions-apiserver v0.0.0-20180509193545-e798125b68b9
-	k8s.io/apimachinery v0.0.0-20181215012845-4d029f033399
-	k8s.io/apiserver v0.0.0-20181219071059-f3820dc89a5c // indirect
-	k8s.io/client-go v10.0.0+incompatible // indirect
+	k8s.io/api v0.0.0-20190202010724-74b699b93c15
+	k8s.io/apiextensions-apiserver v0.0.0-20190202013456-d4288ab64945
+	k8s.io/apimachinery v0.0.0-20190117220443-572dfc7bdfcb
+	k8s.io/apiserver v0.0.0-20190202011929-26bc712632e1 // indirect
+	k8s.io/client-go v2.0.0-alpha.0.0.20190202011228-6e4752048fde+incompatible // indirect
 	k8s.io/klog v0.1.0 // indirect
-	k8s.io/kube-aggregator v0.0.0-20180509185545-29c7989121fc
+	k8s.io/kube-aggregator v0.0.0-20190202012332-e37a94925e5c
 	k8s.io/kube-openapi v0.0.0-20181114233023-0317810137be // indirect
 	sigs.k8s.io/yaml v1.1.0 // indirect
 )

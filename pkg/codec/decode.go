@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 
 	"mantle/internal/yaml"
-	"mantle/pkg/core"
+	"mantle/pkg/core/configmap"
 
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -34,7 +34,7 @@ func Decode(input io.Reader) (io.Reader, error) {
 
 	switch kubeTypedObj := kubeObj.(type) {
 	case *v1.ConfigMap:
-		cm, err := core.NewConfigMapFromKubeConfigMap(kubeTypedObj)
+		cm, err := configmap.NewConfigMapFromKubeConfigMap(kubeTypedObj)
 		if err != nil {
 			return nil, err
 		}
