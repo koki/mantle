@@ -186,6 +186,12 @@ func (pt *PodTemplate) toKubeDNSPolicyV1() (v1.DNSPolicy, error) {
 
 	case DNSDefault:
 		return v1.DNSDefault, nil
+
+	case DNSNone:
+		return v1.DNSNone, nil
+
+	case DNSUnset:
+		return "", nil
 	}
 
 	return "", serrors.InvalidInstanceError(pt.DNSPolicy)

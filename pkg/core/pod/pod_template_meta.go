@@ -2,6 +2,7 @@ package pod
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,5 +48,30 @@ func (ptm *PodTemplateMeta) toKubeV1() (*metav1.ObjectMeta, error) {
 		ClusterName: ptm.Cluster,
 		Labels:      labels,
 		Annotations: annotations,
+	}, nil
+}
+
+// NewPodTemplateMetaFromKubeObjectMeta will create a new
+// PodTemplateMeta object with the data from a provided kubernetes
+// ObjectMeta object
+func NewPodTemplateMetaFromKubeObjectMeta(obj interface{}) (*PodTemplateMeta, error) {
+	switch reflect.TypeOf(obj) {
+	case reflect.TypeOf(metav1.ObjectMeta{}):
+		return fromKubeObjectMetaV1(obj.(metav1.ObjectMeta))
+	case reflect.TypeOf(&metav1.ObjectMeta{}):
+		o := obj.(*metav1.ObjectMeta)
+		return fromKubeObjectMetaV1(*o)
+	default:
+		return nil, fmt.Errorf("unknown ObjectMeta version: %s", reflect.TypeOf(obj))
+	}
+}
+
+func fromKubeObjectMetaV1(meta metav1.ObjectMeta) (*PodTemplateMeta, error) {
+	return &PodTemplateMeta{
+		Name:        meta.Name,
+		Namespace:   meta.Namespace,
+		Cluster:     meta.ClusterName,
+		Labels:      meta.Labels,
+		Annotations: meta.Annotations,
 	}, nil
 }

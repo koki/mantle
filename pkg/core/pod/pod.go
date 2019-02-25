@@ -21,6 +21,7 @@ const (
 	ConditionStatusTrue ConditionStatus = iota
 	ConditionStatusFalse
 	ConditionStatusUnknown
+	ConditionStatusNone
 )
 
 type PodPhase int
@@ -31,6 +32,7 @@ const (
 	PodPhaseSucceeded
 	PodPhaseFailed
 	PodPhaseUnknown
+	PodPhaseNone
 )
 
 type PodQOSClass int
@@ -39,6 +41,7 @@ const (
 	PodQOSClassGuaranteed PodQOSClass = iota
 	PodQOSClassBurstable
 	PodQOSClassBestEffort
+	PodQOSClassNone
 )
 
 // Pod defines a pod object

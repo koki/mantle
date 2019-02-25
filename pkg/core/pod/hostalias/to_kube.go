@@ -20,10 +20,8 @@ func (h *HostAlias) ToKube(version string) (interface{}, error) {
 }
 
 func (h *HostAlias) toKubeV1() (*v1.HostAlias, error) {
-	hostAlias := v1.HostAlias{}
-
-	hostAlias.IP = h.IP
-	hostAlias.Hostnames = h.Hostnames
-
-	return &hostAlias, nil
+	return &v1.HostAlias{
+		IP:        h.IP,
+		Hostnames: h.Hostnames,
+	}, nil
 }

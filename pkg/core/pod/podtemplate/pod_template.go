@@ -49,6 +49,7 @@ const (
 	PodConditionInitialized
 	PodConditionReasonUnschedulable
 	PodConditionContainersReady
+	PodConditionNone
 )
 
 type ResolverOptions struct {
@@ -73,6 +74,8 @@ const (
 	DNSClusterFirstWithHostNet DNSPolicy = iota
 	DNSClusterFirst
 	DNSDefault
+	DNSNone
+	DNSUnset
 )
 
 // HostMode defines the pod host mode

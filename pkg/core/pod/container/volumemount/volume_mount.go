@@ -7,10 +7,11 @@ type VolumeMount struct {
 	ReadOnly    bool              `json:"readOnly,omitemty"`
 }
 
-type MountPropagation string
+type MountPropagation int
 
 const (
-	MountPropagationHostToContainer MountPropagation = "host-to-container"
-	MountPropagationBidirectional   MountPropagation = "bidirectional"
-	MountPropagationNone            MountPropagation = "none"
+	MountPropagationHostToContainer MountPropagation = iota
+	MountPropagationBidirectional
+	MountPropagationNone
+	MountPropagationDefault
 )

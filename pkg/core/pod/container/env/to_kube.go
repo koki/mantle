@@ -31,7 +31,6 @@ func (e *Env) toKubeV1() (*v1.EnvVar, *v1.EnvFromSource, error) {
 	} else {
 		from := e.From
 
-		// ResourceFieldRef
 		switch from.From {
 		case EnvFromTypeConfig:
 			if len(from.ConfigMapOrSecretKey) > 0 {
@@ -58,6 +57,7 @@ func (e *Env) toKubeV1() (*v1.EnvVar, *v1.EnvFromSource, error) {
 					},
 				}
 			}
+
 		case EnvFromTypeSecret:
 			if len(from.ConfigMapOrSecretKey) > 0 {
 				envVar = &v1.EnvVar{

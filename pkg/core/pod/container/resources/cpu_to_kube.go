@@ -43,5 +43,9 @@ func (c *CPU) toKubeV1() (*v1.ResourceRequirements, error) {
 		limits[v1.ResourceCPU] = q
 	}
 
-	return &v1.ResourceRequirements{Limits: limits, Requests: requests}, nil
+	if len(requests) > 0 || len(requests) > 0 {
+		return &v1.ResourceRequirements{Limits: limits, Requests: requests}, nil
+	}
+
+	return nil, nil
 }

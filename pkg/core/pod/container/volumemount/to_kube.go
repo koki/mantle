@@ -23,14 +23,20 @@ func (vm *VolumeMount) toKubeV1() (*v1.VolumeMount, error) {
 	kubeMount := v1.VolumeMount{}
 
 	if vm.Propagation != nil {
-		mode := v1.MountPropagationHostToContainer
+		var mode v1.MountPropagationMode
 
-		if *vm.Propagation == MountPropagationBidirectional {
+		switch *vm.Propagation {
+		case MountPropagationHostToContainer:
+			mode = v1.MountPropagationHostToContainer
+
+		case MountPropagationBidirectional:
 			mode = v1.MountPropagationBidirectional
-		}
 
-		if *vm.Propagation == MountPropagationNone {
+		case MountPropagationNone:
 			mode = v1.MountPropagationNone
+
+		default:
+			mode = ""
 		}
 
 		kubeMount.MountPropagation = &mode

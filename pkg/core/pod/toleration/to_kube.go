@@ -29,8 +29,10 @@ func (t *Toleration) toKubeV1() (*v1.Toleration, error) {
 	switch t.Op {
 	case TolerationOperatorExists:
 		toleration.Operator = v1.TolerationOpExists
+
 	case TolerationOperatorEqual:
 		toleration.Operator = v1.TolerationOpEqual
+
 	default:
 		return nil, fmt.Errorf("unrecognized op in toleration: %v", t)
 	}
@@ -38,10 +40,13 @@ func (t *Toleration) toKubeV1() (*v1.Toleration, error) {
 	switch t.Effect {
 	case TaintEffectNoSchedule:
 		toleration.Effect = v1.TaintEffectNoSchedule
+
 	case TaintEffectPreferNoSchedule:
 		toleration.Effect = v1.TaintEffectPreferNoSchedule
+
 	case TaintEffectNoExecute:
 		toleration.Effect = v1.TaintEffectNoExecute
+		
 	default:
 		return nil, fmt.Errorf("unrecognized effect in toleration: %v", t)
 	}

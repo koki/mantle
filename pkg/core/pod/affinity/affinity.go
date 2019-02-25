@@ -3,7 +3,7 @@ package affinity
 type Affinity struct {
 	NodeAffinity    map[AffinityType][]NodeTerm `json:"node,omitempty"`
 	PodAffinity     map[AffinityType][]PodTerm  `json:"pod,omitempty"`
-	PodAntiAffinity map[AffinityType][]PodTerm  `json:"anti_pod,omitempty"`
+	PodAntiAffinity map[AffinityType][]PodTerm  `json:"antiPod,omitempty"`
 }
 
 type PodTerm struct {
@@ -14,9 +14,9 @@ type PodTerm struct {
 }
 
 type NodeTerm struct {
-	Weight      int32             `json:"weight,omitempty"`
-	Expressions []NodeExpressions `json:"expressions,omitempty"`
-	Fields      []NodeExpressions `json:"fields,omitempty"`
+	Weight      int32            `json:"weight,omitempty"`
+	Expressions []NodeExpression `json:"expression,omitempty"`
+	Fields      []NodeExpression `json:"field,omitempty"`
 }
 
 type AffinityType int
@@ -27,11 +27,11 @@ const (
 )
 
 type Selector struct {
-	Labels      map[string]string     `json:"labels,omitempty"`
-	Expressions []SelectorExpressions `json:"expressions,omitempty"`
+	Labels      map[string]string    `json:"labels,omitempty"`
+	Expressions []SelectorExpression `json:"expression,omitempty"`
 }
 
-type SelectorExpressions struct {
+type SelectorExpression struct {
 	Key    string           `json:"key,omitempty"`
 	Op     SelectorOperator `json:"op,omitempty"`
 	Values []string         `json:"values,omitempty"`
@@ -46,7 +46,7 @@ const (
 	SelectorOperatorDoesNotExist
 )
 
-type NodeExpressions struct {
+type NodeExpression struct {
 	Key    string       `json:"key,omitempty"`
 	Op     NodeOperator `json:"op,omitempty"`
 	Values []string     `json:"values,omitempty"`

@@ -76,17 +76,19 @@ type ContainerStateTerminated struct {
 	Signal     int32       `json:"signal,omitempty"`
 }
 
-type TerminationMessagePolicy string
+type TerminationMessagePolicy int
 
 const (
-	TerminationMessageReadFile              TerminationMessagePolicy = "file"
-	TerminationMessageFallbackToLogsOnError TerminationMessagePolicy = "fallback-to-logs-on-error"
+	TerminationMessageReadFile TerminationMessagePolicy = iota
+	TerminationMessageFallbackToLogsOnError
+	TerminationMessageDefault
 )
 
-type PullPolicy string
+type PullPolicy int
 
 const (
-	PullAlways       PullPolicy = "always"
-	PullNever        PullPolicy = "never"
-	PullIfNotPresent PullPolicy = "if-not-present"
+	PullAlways PullPolicy = iota
+	PullNever
+	PullIfNotPresent
+	PullDefault
 )

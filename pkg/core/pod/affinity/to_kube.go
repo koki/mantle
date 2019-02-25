@@ -210,7 +210,7 @@ func (a *Affinity) toKubeNodeSelectorTermV1(term NodeTerm) v1.NodeSelectorTerm {
 	return nodeSelectorTerm
 }
 
-func (a *Affinity) toKubeLabelSelectorRequirementV1(expressions []SelectorExpressions) []metav1.LabelSelectorRequirement {
+func (a *Affinity) toKubeLabelSelectorRequirementV1(expressions []SelectorExpression) []metav1.LabelSelectorRequirement {
 	requirements := []metav1.LabelSelectorRequirement{}
 
 	for _, e := range expressions {
@@ -236,7 +236,7 @@ func (a *Affinity) toKubeLabelSelectorRequirementV1(expressions []SelectorExpres
 	return requirements
 }
 
-func (a *Affinity) toKubeNodeSelectorRequirementV1(expressions []NodeExpressions) []v1.NodeSelectorRequirement {
+func (a *Affinity) toKubeNodeSelectorRequirementV1(expressions []NodeExpression) []v1.NodeSelectorRequirement {
 	requirements := []v1.NodeSelectorRequirement{}
 
 	for _, e := range expressions {

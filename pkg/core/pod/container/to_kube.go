@@ -52,7 +52,9 @@ func (c *Container) toKubeV1() (v1.Container, error) {
 	if err != nil {
 		return v1.Container{}, err
 	}
-	kubeContainer.Resources = *resources
+	if resources != nil {
+		kubeContainer.Resources = *resources
+	}
 
 	if c.LivenessProbe != nil {
 		livenessProbe, err := c.LivenessProbe.ToKube("v1")
@@ -162,7 +164,7 @@ func (c *Container) toKubeResourcesV1() (*v1.ResourceRequirements, error) {
 			return nil, err
 		}
 
-		if reflect.ValueOf(cpuResources).IsNil() {
+		if !reflect.ValueOf(cpuResources).IsNil() {
 			res := cpuResources.(*v1.ResourceRequirements)
 			err := mergo.Merge(&limits, res.Limits)
 			if err != nil {
@@ -181,7 +183,7 @@ func (c *Container) toKubeResourcesV1() (*v1.ResourceRequirements, error) {
 			return nil, err
 		}
 
-		if reflect.ValueOf(memResources).IsNil() {
+		if !reflect.ValueOf(memResources).IsNil() {
 			res := memResources.(*v1.ResourceRequirements)
 			err := mergo.Merge(&limits, res.Limits)
 			if err != nil {
@@ -194,30 +196,39 @@ func (c *Container) toKubeResourcesV1() (*v1.ResourceRequirements, error) {
 		}
 	}
 
-	return &requirements, nil
+	if len(limits) > 0 || len(requests) > 0 {
+		return &requirements, nil
+	}
+
+	return nil, nil
 }
 
 func (c *Container) toKubeTerminationMsgPolicyV1() v1.TerminationMessagePolicy {
 	if c.TerminationMsgPolicy == TerminationMessageReadFile {
 		return v1.TerminationMessageReadFile
 	}
+
 	if c.TerminationMsgPolicy == TerminationMessageFallbackToLogsOnError {
 		return v1.TerminationMessageFallbackToLogsOnError
 	}
+
 	return ""
 }
 
 func (c *Container) toKubePullPolicyV1() v1.PullPolicy {
-	if c.Pull == PullAlways {
+	switch c.Pull {
+	case PullAlways:
 		return v1.PullAlways
-	}
-	if c.Pull == PullNever {
+
+	case PullNever:
 		return v1.PullNever
-	}
-	if c.Pull == PullIfNotPresent {
+
+	case PullIfNotPresent:
 		return v1.PullIfNotPresent
+
+	default:
+		return ""
 	}
-	return ""
 }
 
 func (c *Container) toKubeVolumeMountV1() ([]v1.VolumeMount, error) {
@@ -257,9 +268,10 @@ func (c *Container) toKubeLifecycleV1() (*v1.Lifecycle, error) {
 	}
 
 	if kubeOnStart != nil || kubePreStop != nil {
-		lc = &v1.Lifecycle{}
-		lc.PostStart = kubeOnStart
-		lc.PreStop = kubePreStop
+		lc = &v1.Lifecycle{
+			PostStart: kubeOnStart,
+			PreStop:   kubePreStop,
+		}
 	}
 
 	return lc, nil
