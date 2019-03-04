@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	. "mantle/internal/pkg/core/pod/volume/pvc"
+	. "mantle/pkg/core/pod/volume/pvc"
 
 	"k8s.io/api/core/v1"
 )

@@ -58,7 +58,7 @@ func TestNewEnvFromWithValidInputs(t *testing.T) {
 			t.Errorf("env builder fn NewEnvFrom() wrongly detects error for from-type %s", typ)
 		}
 
-		if e.From.Key != "key" {
+		if e.From.VarNameOrPrefix != "key" {
 			t.Errorf("env builder fn NewEnvFrom() does not assign env key with from-type %s", typ)
 		}
 
@@ -74,7 +74,7 @@ func TestNewEnvFromWithValidInputs(t *testing.T) {
 			t.Errorf("env builder fn NewEnvFrom() wrongly not assigning From parameter")
 		}
 
-		if e.From.Key != "key" || *(e.From.Required) == true || e.From.From != string(typ) {
+		if e.From.VarNameOrPrefix != "key" || *(e.From.Required) == true || e.From.From != typ {
 			t.Errorf("env builder fn NewEnvFrom() wrongly assigning Key, Required or From value")
 		}
 	}
@@ -102,8 +102,14 @@ func TestNewEnvFromSecret(t *testing.T) {
 	if err != nil {
 		t.Errorf("env builder fn NewEnvFromSecret() wrongly detects error with valid key, secretName, and secretKey")
 	}
-	if e.From.From != "secret:secretName:secretKey" {
-		t.Errorf("env builder fn NewEnvFromSecret() wrongly constructs (%s) environment string with valid key, secretName and secretKey", e.From.From)
+	if e.From.From != EnvFromTypeSecret {
+		t.Errorf("env builder fn NewEnvFromSecret() wrongly constructs (%s) From with valid key, secretName and secretKey", e.From.From)
+	}
+	if e.From.ConfigMapOrSecretName != "secretName" {
+		t.Errorf("env builder fn NewEnvFromSecret() wrongly constructs (%s) ConfigMapOrSecretName with valid key, secretName and secretKey", e.From.From)
+	}
+	if e.From.ConfigMapOrSecretKey != "secretKey" {
+		t.Errorf("env builder fn NewEnvFromSecret() wrongly constructs (%s) ConfigMapOrSecretKey with valid key, secretName and secretKey", e.From.From)
 	}
 
 	e, err = NewEnvFromSecret("key", "secretName", "")
@@ -111,8 +117,11 @@ func TestNewEnvFromSecret(t *testing.T) {
 		t.Errorf("env builder fn NewEnvFromSecret() wrongly detects error with valid key, secretName, and empty secretKey")
 	}
 
-	if e.From.From != "secret:secretName" {
-		t.Errorf("env builder fn NewEnvFromSecret() wrongly construct (%s) environment string with valid key, secretName and empty secretKey", e.From.From)
+	if e.From.From != EnvFromTypeSecret {
+		t.Errorf("env builder fn NewEnvFromSecret() wrongly constructs (%s) From with valid key, secretName and secretKey", e.From.From)
+	}
+	if e.From.ConfigMapOrSecretName != "secretName" {
+		t.Errorf("env builder fn NewEnvFromSecret() wrongly constructs (%s) ConfigMapOrSecretName with valid key, secretName and secretKey", e.From.From)
 	}
 }
 
@@ -121,17 +130,25 @@ func TestNewEnvFromConfig(t *testing.T) {
 	if err != nil {
 		t.Errorf("env builder fn NewEnvFromConfig() wrongly detects error with valid key, configName, and configKey")
 	}
-	if e.From.From != "config:configName:configKey" {
-		t.Errorf("env builder fn NewEnvFromSecret() wrongly constructs (%s) environment string with valid key, configName and configKey", e.From.From)
+	if e.From.From != EnvFromTypeConfig {
+		t.Errorf("env builder fn NewEnvFromConfig() wrongly constructs (%s) From with valid key, configName and configKey", e.From.From)
+	}
+	if e.From.ConfigMapOrSecretName != "configName" {
+		t.Errorf("env builder fn NewEnvFromConfig() wrongly constructs (%s) ConfigMapOrSecretName with valid key, configName and configKey", e.From.From)
+	}
+	if e.From.ConfigMapOrSecretKey != "configKey" {
+		t.Errorf("env builder fn NewEnvFromConfig() wrongly constructs (%s) ConfigMapOrSecretKey with valid key, configName and configKey", e.From.From)
 	}
 
 	e, err = NewEnvFromConfig("key", "configName", "")
 	if err != nil {
-		t.Errorf("env builder fn NewEnvFromConifg() wrongly detects error with valid key, configName, and empty configKey")
+		t.Errorf("env builder fn NewEnvFromConfig() wrongly detects error with valid key, configName, and empty configKey")
 	}
-
-	if e.From.From != "config:configName" {
-		t.Errorf("env builder fn NewEnvFromConfig() wrongly construct (%s) environment string with valid key, configName and empty configKey", e.From.From)
+	if e.From.From != EnvFromTypeConfig {
+		t.Errorf("env builder fn NewEnvFromConfig() wrongly constructs (%s) From with valid key, configName and configKey", e.From.From)
+	}
+	if e.From.ConfigMapOrSecretName != "configName" {
+		t.Errorf("env builder fn NewEnvFroConfig() wrongly constructs (%s) ConfigMapOrSecretName with valid key, configName and configKey", e.From.From)
 	}
 }
 
@@ -221,11 +238,6 @@ func TestNewEnvFromSecretOrConfigWithValidInputs(t *testing.T) {
 }
 
 func TestNewEnvFromSecretOrConfigWithInvalidInputs(t *testing.T) {
-	_, err := NewEnvFromSecretOrConfig(EnvFromTypeSecret, "", "secretName", "secretKey")
-	if err == nil {
-		t.Errorf("env builder fn NewEnvFromSecretOrConfig() does not detect invalid empty key input")
-	}
-
 	typeList := []EnvFromType{
 		EnvFromTypeCPULimits,
 		EnvFromTypeMemLimits,

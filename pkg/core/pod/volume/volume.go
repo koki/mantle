@@ -69,10 +69,20 @@ func (v *Volume) ToKube(version string) (interface{}, error) {
 	for n := 0; n < fields.NumField(); n++ {
 		field := fields.Field(n)
 		if field.IsValid() && !field.IsNil() {
+			var err error
+
 			convFunc := field.MethodByName("ToKube")
 			resp := convFunc.Call([]reflect.Value{reflect.ValueOf(version)})
-			err := resp[1].Interface()
-			return resp[0].Interface(), err.(error)
+			if !resp[1].IsNil() {
+				err = resp[1].Interface().(error)
+			} else {
+				err = nil
+			}
+
+			if !resp[0].IsNil() {
+				return resp[0].Interface(), err
+			}
+			return nil, err
 		}
 	}
 

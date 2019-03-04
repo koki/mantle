@@ -27,7 +27,7 @@ type PodTemplate struct {
 	GIDs                   []int64                  `json:"gids,omitempty"`
 	Registries             []string                 `json:"registry_secrets,omitempty"`
 	Hostname               string                   `json:"hostname,omitempty"`
-	Affinity               affinity.Affinity        `json:"affinity,omitempty"`
+	Affinity               *affinity.Affinity       `json:"affinity,omitempty"`
 	SchedulerName          string                   `json:"scheduler_name,omitempty"`
 	Tolerations            []toleration.Toleration  `json:"tolerations,omitempty"`
 	HostAliases            []hostalias.HostAlias    `json:"host_aliases,omitempty"`

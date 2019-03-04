@@ -45,10 +45,14 @@ func fromKubePodSpecV1(kubeSpec v1.PodSpec) (*PodTemplate, error) {
 		return nil, err
 	}
 	if a != nil {
-		mantlePod.Affinity = *a
+		mantlePod.Affinity = a
 	}
 
 	var initContainers []container.Container
+
+	if kubeSpec.InitContainers != nil {
+		initContainers = make([]container.Container, 0)
+	}
 	for _, kubeContainer := range kubeSpec.InitContainers {
 		c, err := container.NewContainerFromKubeContainer(&kubeContainer)
 		if err != nil {
@@ -59,6 +63,10 @@ func fromKubePodSpecV1(kubeSpec v1.PodSpec) (*PodTemplate, error) {
 	mantlePod.InitContainers = initContainers
 
 	var containers []container.Container
+
+	if kubeSpec.Containers != nil {
+		containers = make([]container.Container, 0)
+	}
 	for _, kubeContainer := range kubeSpec.Containers {
 		c, err := container.NewContainerFromKubeContainer(&kubeContainer)
 		if err != nil {
@@ -82,6 +90,7 @@ func fromKubePodSpecV1(kubeSpec v1.PodSpec) (*PodTemplate, error) {
 
 	mantlePod.HostMode = fromKubeHostModeV1(kubeSpec)
 	mantlePod.Hostname = fromKubeHostnameV1(kubeSpec)
+	mantlePod.ShareNamespace = kubeSpec.ShareProcessNamespace
 	mantlePod.Registries = fromKubeRegistriesV1(kubeSpec.ImagePullSecrets)
 
 	restartPolicy, err := fromKubeRestartPolicyV1(kubeSpec.RestartPolicy)
@@ -90,6 +99,7 @@ func fromKubePodSpecV1(kubeSpec v1.PodSpec) (*PodTemplate, error) {
 	}
 	mantlePod.RestartPolicy = restartPolicy
 
+	mantlePod.NodeSelector = kubeSpec.NodeSelector
 	mantlePod.SchedulerName = kubeSpec.SchedulerName
 	mantlePod.Account = kubeSpec.ServiceAccountName
 	mantlePod.AutomountAccountToken = kubeSpec.AutomountServiceAccountToken
@@ -131,11 +141,24 @@ func fromKubePodSpecV1(kubeSpec v1.PodSpec) (*PodTemplate, error) {
 		}
 	}
 
+	mantlePod.Nameservers, mantlePod.SearchDomains, mantlePod.ResolverOptions = fromKubePodDNSConfigV1(kubeSpec.DNSConfig)
+	gates, err := fromKubePodReadinessGateV1(kubeSpec.ReadinessGates)
+	if err != nil {
+		return nil, err
+	}
+	mantlePod.Gates = gates
+	mantlePod.RuntimeClass = kubeSpec.RuntimeClassName
+	mantlePod.ServiceLinks = kubeSpec.EnableServiceLinks
+
 	return mantlePod, nil
 }
 
 func fromKubeVolumesV1(kubeVolumes []v1.Volume) (map[string]volume.Volume, error) {
-	volumes := map[string]volume.Volume{}
+	var volumes map[string]volume.Volume
+
+	if kubeVolumes != nil {
+		volumes = make(map[string]volume.Volume)
+	}
 
 	for _, kubeVolume := range kubeVolumes {
 		name := kubeVolume.Name
@@ -173,6 +196,10 @@ func fromKubeDNSPolicyV1(dnsPolicy v1.DNSPolicy) (DNSPolicy, error) {
 func fromKubeHostAliasesV1(kubeAliases []v1.HostAlias) ([]hostalias.HostAlias, error) {
 	var aliases []hostalias.HostAlias
 
+	if kubeAliases != nil {
+		aliases = make([]hostalias.HostAlias, 0)
+	}
+
 	for _, alias := range kubeAliases {
 		a, err := hostalias.NewHostAliasFromKubeHostAlias(alias)
 		if err != nil {
@@ -187,12 +214,18 @@ func fromKubeHostAliasesV1(kubeAliases []v1.HostAlias) ([]hostalias.HostAlias, e
 func fromKubeHostModeV1(spec v1.PodSpec) []HostMode {
 	var hostModes []HostMode
 
+	if spec.HostNetwork || spec.HostPID || spec.HostIPC {
+		hostModes = make([]HostMode, 0)
+	}
+
 	if spec.HostNetwork {
 		hostModes = append(hostModes, HostModeNet)
 	}
+
 	if spec.HostPID {
 		hostModes = append(hostModes, HostModePID)
 	}
+
 	if spec.HostIPC {
 		hostModes = append(hostModes, HostModeIPC)
 	}
@@ -209,7 +242,7 @@ func fromKubeHostnameV1(spec v1.PodSpec) string {
 
 	// TODO: verify that .subdomain is a valid input. i.e. without hostname
 	if spec.Subdomain != "" {
-		hostName = fmt.Sprintf("%s.%s", spec.Subdomain, hostName)
+		hostName = fmt.Sprintf("%s.%s", hostName, spec.Subdomain)
 	}
 
 	return hostName
@@ -217,6 +250,10 @@ func fromKubeHostnameV1(spec v1.PodSpec) string {
 
 func fromKubeRegistriesV1(ref []v1.LocalObjectReference) []string {
 	var registries []string
+
+	if ref != nil {
+		registries = make([]string, 0)
+	}
 
 	for _, r := range ref {
 		registries = append(registries, r.Name)
@@ -246,6 +283,10 @@ func fromKubeRestartPolicyV1(policy v1.RestartPolicy) (RestartPolicy, error) {
 func fromKubeTolerationsV1(tolerations []v1.Toleration) ([]toleration.Toleration, error) {
 	var tols []toleration.Toleration
 
+	if tolerations != nil {
+		tols = make([]toleration.Toleration, 0)
+	}
+
 	for _, t := range tolerations {
 		tol, err := toleration.NewTolerationFromKubeToleration(t)
 		if err != nil {
@@ -255,4 +296,74 @@ func fromKubeTolerationsV1(tolerations []v1.Toleration) ([]toleration.Toleration
 	}
 
 	return tols, nil
+}
+
+func fromKubePodDNSConfigV1(kubeDNS *v1.PodDNSConfig) ([]string, []string, []ResolverOptions) {
+	var options []ResolverOptions
+	var nameservers []string
+	var domains []string
+
+	if kubeDNS != nil {
+		options = make([]ResolverOptions, 0)
+		nameservers = make([]string, 0)
+		domains = make([]string, 0)
+
+		if len(kubeDNS.Nameservers) > 0 {
+			nameservers = kubeDNS.Nameservers
+		}
+
+		if len(kubeDNS.Searches) > 0 {
+			domains = kubeDNS.Searches
+		}
+
+		for _, opt := range kubeDNS.Options {
+			option := ResolverOptions{
+				Name:  opt.Name,
+				Value: opt.Value,
+			}
+			options = append(options, option)
+		}
+	}
+
+	return nameservers, domains, options
+}
+
+func fromKubePodReadinessGateV1(kubeGates []v1.PodReadinessGate) ([]PodConditionType, error) {
+	var gates []PodConditionType
+
+	if kubeGates != nil {
+		gates = make([]PodConditionType, 0)
+	}
+
+	for _, kubeCondition := range kubeGates {
+		gate, err := FromKubePodConditionTypeV1(kubeCondition.ConditionType)
+		if err != nil {
+			return nil, err
+		}
+		gates = append(gates, gate)
+	}
+
+	return gates, nil
+}
+
+func FromKubePodConditionTypeV1(condition v1.PodConditionType) (PodConditionType, error) {
+	switch condition {
+	case "":
+		return PodConditionNone, nil
+
+	case v1.PodScheduled:
+		return PodConditionScheduled, nil
+
+	case v1.PodReady:
+		return PodConditionReady, nil
+
+	case v1.PodInitialized:
+		return PodConditionInitialized, nil
+
+	case v1.PodReasonUnschedulable:
+		return PodConditionReasonUnschedulable, nil
+
+	default:
+		return PodConditionNone, serrors.InvalidInstanceError(condition)
+	}
 }

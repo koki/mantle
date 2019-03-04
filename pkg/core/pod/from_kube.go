@@ -18,9 +18,16 @@ func NewPodFromKubePod(pod interface{}) (*Pod, error) {
 	switch reflect.TypeOf(pod) {
 	case reflect.TypeOf(v1.Pod{}):
 		obj := pod.(v1.Pod)
+		if obj.APIVersion != "v1" {
+			return nil, fmt.Errorf("mis-matched versions.  Pod type: %s, APIVersion: %s", reflect.TypeOf(pod), obj.APIVersion)
+		}
 		return fromKubePodV1(&obj)
 	case reflect.TypeOf(&v1.Pod{}):
-		return fromKubePodV1(pod.(*v1.Pod))
+		obj := pod.(*v1.Pod)
+		if obj.APIVersion != "v1" {
+			return nil, fmt.Errorf("mis-matched versions.  Pod type: %s, APIVersion: %s", reflect.TypeOf(pod), obj.APIVersion)
+		}
+		return fromKubePodV1(obj)
 	default:
 		return nil, fmt.Errorf("unknown pod version: %s", reflect.TypeOf(pod))
 	}
@@ -128,7 +135,7 @@ func fromKubePodConditionV1(kubeConditions []v1.PodCondition) ([]PodCondition, e
 			LastTransitionTime: kubeCondition.LastTransitionTime,
 		}
 
-		typ, err := fromKubePodConditionTypeV1(kubeCondition.Type)
+		typ, err := FromKubePodConditionTypeV1(kubeCondition.Type)
 		if err != nil {
 			return nil, err
 		}
@@ -144,28 +151,6 @@ func fromKubePodConditionV1(kubeConditions []v1.PodCondition) ([]PodCondition, e
 	}
 
 	return conditions, nil
-}
-
-func fromKubePodConditionTypeV1(condition v1.PodConditionType) (PodConditionType, error) {
-	switch condition {
-	case "":
-		return PodConditionNone, nil
-
-	case v1.PodScheduled:
-		return PodConditionScheduled, nil
-
-	case v1.PodReady:
-		return PodConditionReady, nil
-
-	case v1.PodInitialized:
-		return PodConditionInitialized, nil
-
-	case v1.PodReasonUnschedulable:
-		return PodConditionReasonUnschedulable, nil
-
-	default:
-		return PodConditionNone, serrors.InvalidInstanceError(condition)
-	}
 }
 
 func fromKubeConditionStatusV1(status v1.ConditionStatus) (ConditionStatus, error) {

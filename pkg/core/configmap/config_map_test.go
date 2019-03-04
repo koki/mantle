@@ -61,7 +61,7 @@ func TestFromKubeV1(t *testing.T) {
 		BinaryData: map[string][]byte{"bfield1": []byte("bdata1")},
 	}
 
-	cm, _ := fromKubeV1(&v1CM)
+	cm, _ := fromKubeConfigMapV1(&v1CM)
 	if cm.Name != v1CM.Name {
 		t.Errorf("incorrect name, expected %s got %s", v1CM.Name, cm.Name)
 	}

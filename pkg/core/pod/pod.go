@@ -21,6 +21,7 @@ const (
 	ConditionStatusTrue ConditionStatus = iota
 	ConditionStatusFalse
 	ConditionStatusUnknown
+	ConditionStatusNonTolerationse
 	ConditionStatusNone
 )
 

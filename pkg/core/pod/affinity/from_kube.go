@@ -37,54 +37,54 @@ func fromKubeAffinityV1(kubeAffinity *v1.Affinity) (*Affinity, error) {
 }
 
 func fromKubeNodeAffinityV1(kubeNA *v1.NodeAffinity) map[AffinityType][]NodeTerm {
-	nodeAffinity := make(map[AffinityType][]NodeTerm)
+	var nodeAffinity map[AffinityType][]NodeTerm
 
-	if kubeNA == nil {
-		return nodeAffinity
-	}
+	if kubeNA != nil {
+		nodeAffinity = make(map[AffinityType][]NodeTerm)
 
-	if kubeNA.RequiredDuringSchedulingIgnoredDuringExecution != nil {
-		nodeAffinity[AffinityHard] = fromKubeNodeSelectorV1(kubeNA.RequiredDuringSchedulingIgnoredDuringExecution)
-	}
+		if kubeNA.RequiredDuringSchedulingIgnoredDuringExecution != nil {
+			nodeAffinity[AffinityHard] = fromKubeNodeSelectorV1(kubeNA.RequiredDuringSchedulingIgnoredDuringExecution)
+		}
 
-	if len(kubeNA.PreferredDuringSchedulingIgnoredDuringExecution) > 0 {
-		nodeAffinity[AffinitySoft] = fromKubePreferredSchedulingTermsV1(kubeNA.PreferredDuringSchedulingIgnoredDuringExecution)
+		if len(kubeNA.PreferredDuringSchedulingIgnoredDuringExecution) > 0 {
+			nodeAffinity[AffinitySoft] = fromKubePreferredSchedulingTermsV1(kubeNA.PreferredDuringSchedulingIgnoredDuringExecution)
+		}
 	}
 
 	return nodeAffinity
 }
 
 func fromKubePodAffinityV1(pa *v1.PodAffinity) map[AffinityType][]PodTerm {
-	podAffinity := make(map[AffinityType][]PodTerm)
+	var podAffinity map[AffinityType][]PodTerm
 
-	if pa == nil {
-		return podAffinity
-	}
+	if pa != nil {
+		podAffinity = make(map[AffinityType][]PodTerm)
 
-	if len(pa.RequiredDuringSchedulingIgnoredDuringExecution) > 0 {
-		podAffinity[AffinityHard] = fromKubePodAffinityTermsV1(pa.RequiredDuringSchedulingIgnoredDuringExecution)
-	}
+		if len(pa.RequiredDuringSchedulingIgnoredDuringExecution) > 0 {
+			podAffinity[AffinityHard] = fromKubePodAffinityTermsV1(pa.RequiredDuringSchedulingIgnoredDuringExecution)
+		}
 
-	if len(pa.PreferredDuringSchedulingIgnoredDuringExecution) > 0 {
-		podAffinity[AffinitySoft] = fromKubeWeightedPodAffinityTermsV1(pa.PreferredDuringSchedulingIgnoredDuringExecution)
+		if len(pa.PreferredDuringSchedulingIgnoredDuringExecution) > 0 {
+			podAffinity[AffinitySoft] = fromKubeWeightedPodAffinityTermsV1(pa.PreferredDuringSchedulingIgnoredDuringExecution)
+		}
 	}
 
 	return podAffinity
 }
 
 func fromKubePodAntiAffinityV1(paa *v1.PodAntiAffinity) map[AffinityType][]PodTerm {
-	podAntiAffinity := make(map[AffinityType][]PodTerm)
+	var podAntiAffinity map[AffinityType][]PodTerm
 
-	if paa == nil {
-		return podAntiAffinity
-	}
+	if paa != nil {
+		podAntiAffinity = make(map[AffinityType][]PodTerm)
 
-	if len(paa.RequiredDuringSchedulingIgnoredDuringExecution) > 0 {
-		podAntiAffinity[AffinityHard] = fromKubePodAffinityTermsV1(paa.RequiredDuringSchedulingIgnoredDuringExecution)
-	}
+		if len(paa.RequiredDuringSchedulingIgnoredDuringExecution) > 0 {
+			podAntiAffinity[AffinityHard] = fromKubePodAffinityTermsV1(paa.RequiredDuringSchedulingIgnoredDuringExecution)
+		}
 
-	if len(paa.PreferredDuringSchedulingIgnoredDuringExecution) > 0 {
-		podAntiAffinity[AffinitySoft] = fromKubeWeightedPodAffinityTermsV1(paa.PreferredDuringSchedulingIgnoredDuringExecution)
+		if len(paa.PreferredDuringSchedulingIgnoredDuringExecution) > 0 {
+			podAntiAffinity[AffinitySoft] = fromKubeWeightedPodAffinityTermsV1(paa.PreferredDuringSchedulingIgnoredDuringExecution)
+		}
 	}
 
 	return podAntiAffinity

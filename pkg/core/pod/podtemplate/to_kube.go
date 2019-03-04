@@ -36,8 +36,8 @@ func (pt *PodTemplate) toKubeV1(apiVersion string) (*v1.PodSpec, error) {
 	if len(fields) == 1 {
 		spec.Hostname = pt.Hostname
 	} else {
-		spec.Hostname = fields[1]
-		spec.Subdomain = fields[0]
+		spec.Hostname = fields[0]
+		spec.Subdomain = fields[1]
 	}
 
 	var initContainers []v1.Container
@@ -101,6 +101,7 @@ func (pt *PodTemplate) toKubeV1(apiVersion string) (*v1.PodSpec, error) {
 	spec.HostNetwork = net
 	spec.HostPID = pid
 	spec.HostIPC = ipc
+	spec.ShareProcessNamespace = pt.ShareNamespace
 	spec.ImagePullSecrets = pt.toKubeRegistriesV1()
 	spec.SchedulerName = pt.SchedulerName
 
@@ -265,7 +266,11 @@ func (pt *PodTemplate) toKubeDNSConfigV1() *v1.PodDNSConfig {
 }
 
 func (pt *PodTemplate) toKubePodReadinessGatesV1() []v1.PodReadinessGate {
-	readinessGates := []v1.PodReadinessGate{}
+	var readinessGates []v1.PodReadinessGate
+
+	if len(pt.Gates) > 0 {
+		readinessGates = []v1.PodReadinessGate{}
+	}
 
 	for _, gate := range pt.Gates {
 		podGate := v1.PodReadinessGate{}
@@ -284,14 +289,19 @@ func ToKubePodConditionTypeV1(cond PodConditionType) v1.PodConditionType {
 	switch cond {
 	case PodConditionScheduled:
 		return v1.PodScheduled
+
 	case PodConditionReady:
 		return v1.PodReady
+
 	case PodConditionInitialized:
 		return v1.PodInitialized
+
 	case PodConditionReasonUnschedulable:
 		return v1.PodReasonUnschedulable
+
 	case PodConditionContainersReady:
 		return v1.ContainersReady
+
 	default:
 		return ""
 	}
